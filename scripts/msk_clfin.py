@@ -1,10 +1,13 @@
+
+import os
 import sys
+import argparse
 import numpy as np
-import pandas as pd 
-import matplotlib.pyplot as plt 
-import torch 
-import torch.nn as nn 
-import torch.nn.functional as F 
+import pandas as pd
+import matplotlib.pyplot as plt
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
 from torch.nn.parameter import Parameter
 from torch.autograd import Variable
 from torch.utils.data import Dataset, DataLoader, TensorDataset
@@ -14,10 +17,10 @@ from sklearn.model_selection import StratifiedShuffleSplit
 from sklearn.preprocessing import LabelEncoder
 from imblearn.over_sampling import SMOTE
 
-import skopt 
+import skopt
 from skopt import gp_minimize, forest_minimize
-from skopt.space import Real, Categorical, Integer 
-from skopt.plots import plot_convergence 
+from skopt.space import Real, Categorical, Integer
+from skopt.plots import plot_convergence
 from skopt.plots import plot_objective, plot_evaluations
 #from skopt.plots import plot_objective_2D
 from skopt.utils import use_named_args
@@ -25,7 +28,7 @@ print('imports finished')
 
 class MyDataset(Dataset):
 	#data set class
-	def __init__(self, data, target): 
+	def __init__(self, data, target):
 		self.data = torch.from_numpy(data).float()
 		self.target = torch.from_numpy(target).long()
 
@@ -35,7 +38,7 @@ class MyDataset(Dataset):
 
 		return x, y
 
-	def __len__(self): 
+	def __len__(self):
 		return len(self.data)
 
 class MLP(torch.nn.Module):
@@ -53,26 +56,26 @@ class MLP(torch.nn.Module):
 
 		self.layers.append(nn.Linear(num_fc_units, n_types)) #in features, out_features (hard coded)
 	#functions which run the model
-	def forward(self, x): 
-		for i in range(len(self.layers)): 
+	def forward(self, x):
+		for i in range(len(self.layers)):
 			x = self.layers[i](x)
 
 		return x
 
-	def feature_list(self, x): 
+	def feature_list(self, x):
 		out_list = []
-		for i in range(len(self.layers)): 
+		for i in range(len(self.layers)):
 			x = self.layers[i](x)
 			out_list.append(x)
 		return out_list
 
 	def intermediate_forward(self, x, layer_index):
-		for i in range(layer_index): 
+		for i in range(layer_index):
 			x = self.layers[i](x)
 		return x
-	
-def process_data_all(n_splits, label): 
-	''' 
+
+def process_data_all(test_size, n_splits, label, inputDir, outputDir):
+	'''
 	#Same as process_data_orig in split script, but loads pre-saved versions of training and testing set given the label
 	requires path to new tables outputted from split_data
 	input:
@@ -85,10 +88,10 @@ def process_data_all(n_splits, label):
 		n_features = number of distinct features
 		n_types = number of distinct types
 	'''
-	data_train = pd.read_csv('ft_train' + label + '.csv', sep = ',', squeeze = False, index_col = 0)
-	labels_train = pd.read_csv('labels_train' + label + '.csv', sep = ',', squeeze = True, index_col = 0)
-	data_test = pd.read_csv('ft_test' + label + '.csv', sep = ',', squeeze = False, index_col = 0)
-	labels_test = pd.read_csv('labels_test' + label + '.csv', sep = ',', squeeze = True, index_col = 0)
+	data_train = pd.read_csv(inputDir + 'ft_train' + label + '.csv', sep = ',', squeeze = False, index_col = 0)
+	labels_train = pd.read_csv(inputDir + 'labels_train' + label + '.csv', sep = ',', squeeze = True, index_col = 0)
+	data_test = pd.read_csv(inputDir + 'ft_test' + label + '.csv', sep = ',', squeeze = False, index_col = 0)
+	labels_test = pd.read_csv(inputDir + 'labels_test' + label + '.csv', sep = ',', squeeze = True, index_col = 0)
 	n_features = len(data_test.columns)
 	n_types = len(set(labels_test))
 	print('n_features = ', n_features)
@@ -100,7 +103,7 @@ def process_data_all(n_splits, label):
 	y_train_folds, y_val_folds= [], []
 	for train_index, val_index in sss.split(data_train, labels_train):
 		x_train, x_val = np.array(data_train.iloc[train_index]), np.array(data_train.iloc[val_index])
-		y_train, y_val = np.array(labels_train.iloc[train_index]), np.array(labels_train.iloc[val_index]) 
+		y_train, y_val = np.array(labels_train.iloc[train_index]), np.array(labels_train.iloc[val_index])
 		y_train = encoder.fit_transform(y_train)
 		y_val = encoder.fit_transform(y_val)
 		x_train_folds.append(x_train)
@@ -110,8 +113,8 @@ def process_data_all(n_splits, label):
 	x_test = np.array(data_test)
 	y_test = np.array(encoder.fit_transform(labels_test))
 	return x_train_folds, x_val_folds, y_train_folds, y_val_folds, x_test, y_test, n_features, n_types
-	
-def create_loader(inputs, targets, batch_size=32): 
+
+def create_loader(inputs, targets, batch_size=32):
 	#loaders provide batches of X and y for evalution
 	dataset = MyDataset(inputs, targets)
 	loader = DataLoader(
@@ -123,7 +126,7 @@ def create_loader(inputs, targets, batch_size=32):
 		)
 	return loader
 
-def create_unshuffled_loader(inputs, targets, batch_size=32): 
+def create_unshuffled_loader(inputs, targets, batch_size=32):
 	#no shuffling of the loaded datasets (for model comparisons)
 	dataset = MyDataset(inputs, targets)
 	loader = DataLoader(
@@ -133,14 +136,14 @@ def create_unshuffled_loader(inputs, targets, batch_size=32):
 		num_workers=2,
 		pin_memory=True
 		)
-	return loader  
+	return loader
 
-def evaluate_accuracy_micro(model, data_loader): 
+def evaluate_accuracy_micro(model, data_loader):
 	#evaluates micro-accuracy of the model on the loaded data
 	model.eval()
 	correct=0
-	with torch.no_grad(): 
-		for x, y in data_loader: 
+	with torch.no_grad():
+		for x, y in data_loader:
 			x, y = x.to(device), y.to(device)
 			output = model(x)
 			pred = output.max(1, keepdim=True)[1]
@@ -157,7 +160,7 @@ dim_num_dense_nodes = Integer(low=5, high=2048, name='num_fc_units')
 dimensions= [dim_learning_rate, dim_weight_decay, dim_dropout, dim_num_dense_layers, dim_num_dense_nodes]
 default_paramaters = [1e-4, 1e-3, 1e-6, 0, 100] #start values
 @use_named_args(dimensions=dimensions) #accesses the list of hyper params we want to optimize
-def fitness(learning_rate, weight_decay, dropout_rate, num_fc_layers, num_fc_units):  
+def fitness(learning_rate, weight_decay, dropout_rate, num_fc_layers, num_fc_units):
 	#evaluate model given hyperparameters and saves model if the performance is better than the global best accuracy
 	global best_accuracy
 	global n_features
@@ -175,10 +178,10 @@ def fitness(learning_rate, weight_decay, dropout_rate, num_fc_layers, num_fc_uni
 	criterion = torch.nn.CrossEntropyLoss() #Log Loss function
 	optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
 	#train model
-	for epoch in range(200): 
-		loss = 0 
+	for epoch in range(200):
+		loss = 0
 		model.train()
-		for i, (x,y) in enumerate(train_loader): 
+		for i, (x,y) in enumerate(train_loader):
 			x, y = x.to(device), y.to(device)
 			optimizer.zero_grad()
 			output = model(x)
@@ -188,12 +191,12 @@ def fitness(learning_rate, weight_decay, dropout_rate, num_fc_layers, num_fc_uni
 	#evaluate accuracy
 	accuracy = evaluate_accuracy_micro(model, val_loader)
 	print('Micro Accuracy: {0:.2%}'.format(accuracy))
-	if accuracy > best_accuracy: 
+	if accuracy > best_accuracy:
 		#if the model has better accuracy than the current best
 		torch.save(model, path_best_model)
 		best_accuracy = accuracy
-	del model 
-	return -accuracy 
+	del model
+	return -accuracy
 
 if __name__ == "__main__":
 	#set random seeds for consistency
@@ -204,34 +207,64 @@ if __name__ == "__main__":
 	device = torch.device("cuda:0")
 	device = torch.device(device)
 	#same labels, test_size, n_splits as in split_data
-	test_size = 20
-	n_splits = 10
-	if len(sys.argv) > 2:
-		label = '_' + sys.argv[1]
-	else:
-		label =''
+
+	parser = argparse.ArgumentParser(
+	    description='This program reads the list of command line arguments'
+	)
+
+	# Add Arguments
+
+	parser.add_argument('--test_size', '-ts', type=int,
+	                    help='percentage split for test data')
+
+
+	parser.add_argument('--nsplits', '-ns', type=int,
+	                    help='number of splits for cross validation')
+
+	parser.add_argument('--inputDir', '-id', type=str, help='path of the input directory where output files from previous step have been saved')
+
+	parser.add_argument('--outputDir', '-od', type=str, help='path of the output directory where results for this step will be saved')
+
+	parser.add_argument('--splitFold', '-sf', type=int,
+		                    help='index which grabs the correct ensemble fold')
+
+	# Execute the parse_args() method
+	args = parser.parse_args()
+
+	test_size = args.test_size
+	n_splits = args.nsplits
+	label =''
+	inputDir=args.inputDir
+	outputDir=args.outputDir
+	split=args.splitFold
+
+	print (split)
+	# if len(sys.argv) > 2:
+	# 	label = '_' + sys.argv[1]
+	# else:
+	# 	label =''
 	#load data
-	x_train_folds, x_val_folds, y_train_folds, y_val_folds, x_test, y_test, n_features, n_types= process_data_all(n_splits, label)
+	#
+	x_train_folds, x_val_folds, y_train_folds, y_val_folds, x_test, y_test, n_features, n_types= process_data_all(test_size, n_splits, label, inputDir, outputDir)
 	print('Done Data Processing')
-	split = int(sys.argv[-1]) #defined from the .sh file, index which grabs the correct ensemble fold
+	#split = int(sys.argv[-1]) #defined from the .sh file, index which grabs the correct ensemble fold
 	x_train, y_train = x_train_folds[split], y_train_folds[split]
 	x_val, y_val = x_val_folds[split], y_val_folds[split]
 	#create train, val, test loaders
 	train_loader = create_loader(x_train, y_train)
 	val_loader = create_loader(x_val, y_val)
 	test_loader = create_loader(x_test, y_test)
-	path_best_model = './mskcl_MLP_best_split_' + str(split+1) + label + '.pt' #saves the best found model at this path
-	best_accuracy = 0.0 
+	path_best_model = outputDir + 'mskcl_MLP_best_split_' + str(split+1) + label + '.pt' #saves the best found model at this path
+	best_accuracy = 0.0
 	#gp_minimize finds the minimum of the fitness function by approximating it with a gaussian process, acquisition function over a gaussian prior chooses next param to evaluate
-	search_result = gp_minimize(func=fitness, dimensions=dimensions, acq_func='gp_hedge', n_calls=500, x0=default_paramaters, random_state=7, n_jobs = -1) 
+	#search_result = gp_minimize(func=fitness, dimensions=dimensions, acq_func='gp_hedge', n_calls=500, x0=default_paramaters, random_state=7, n_jobs = -1)
+	search_result = gp_minimize(func=fitness, dimensions=dimensions, acq_func='gp_hedge', n_calls=10, x0=default_paramaters, random_state=7, n_jobs = -1)
 	#save hyperparameters
 	hyps = np.asarray(search_result.x)
-	np.save('./mskcl_MLPsplit_' + str(split) + label + '.npy', hyps)
+	np.save(outputDir + 'mskcl_MLPsplit_' + str(split) + label + '.npy', hyps)
 	#print accuracy of best result
 	best_model = torch.load(path_best_model)
 	test_micro = evaluate_accuracy_micro(best_model, test_loader)
 	print('Split ', split)
 	print('Best Validation accuracy', best_accuracy)
 	print('Test micro accuracy', test_micro)
-
-
