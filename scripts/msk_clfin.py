@@ -184,7 +184,7 @@ def fitness(learning_rate, weight_decay, dropout_rate, num_fc_layers, num_fc_uni
 	criterion = torch.nn.CrossEntropyLoss() #Log Loss function
 	optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
 	#train model
-	for epoch in range(5):
+	for epoch in range(200):
 		loss = 0
 		model.train()
 		print("epoch = ", epoch, " starting..")
@@ -273,7 +273,7 @@ if __name__ == "__main__":
 	best_accuracy = 0.0
 	#gp_minimize finds the minimum of the fitness function by approximating it with a gaussian process, acquisition function over a gaussian prior chooses next param to evaluate
 	#search_result = gp_minimize(func=fitness, dimensions=dimensions, acq_func='gp_hedge', n_calls=500, x0=default_paramaters, random_state=7, n_jobs = -1)
-	search_result = gp_minimize(func=fitness, dimensions=dimensions, acq_func='gp_hedge', n_calls=20, x0=default_paramaters, random_state=7, n_jobs = -1)
+	search_result = gp_minimize(func=fitness, dimensions=dimensions, acq_func='gp_hedge', n_calls=500, x0=default_paramaters, random_state=7, n_jobs = -1)
 	#save hyperparameters
 	hyps = np.asarray(search_result.x)
 	np.save(outputDir + 'mskcl_MLPsplit_' + str(split) + label + '.npy', hyps)
