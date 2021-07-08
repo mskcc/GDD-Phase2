@@ -2,6 +2,7 @@
 import os
 import sys
 import argparse
+import datetime
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -24,7 +25,7 @@ from skopt.plots import plot_convergence
 from skopt.plots import plot_objective, plot_evaluations
 #from skopt.plots import plot_objective_2D
 from skopt.utils import use_named_args
-print('imports finished')
+#print('imports finished')
 
 class MyDataset(Dataset):
 	#data set class
@@ -166,21 +167,27 @@ def fitness(learning_rate, weight_decay, dropout_rate, num_fc_layers, num_fc_uni
 	global n_features
 	global n_types
 	#best_accuracy = 0.0
+	#print()
+	print(datetime.datetime.now())
+	print("model fitting starts...")
 	print() #print tested hyperparameters
 	print('learning rate: ',learning_rate)
 	print('weight_decay: ', weight_decay)
 	print('dropout_rate:', dropout_rate)
 	print('num_fc_layers: ', num_fc_layers + 1)
 	print('num_fc_units: ', num_fc_units)
+	print()
 	#load model
 	model = MLP(num_fc_layers, num_fc_units, dropout_rate, n_features, n_types).to(device)
-	print('model built')
+	print('model built...')
+	print()
 	criterion = torch.nn.CrossEntropyLoss() #Log Loss function
 	optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
 	#train model
-	for epoch in range(200):
+	for epoch in range(5):
 		loss = 0
 		model.train()
+		print("epoch = ", epoch, " starting..")
 		for i, (x,y) in enumerate(train_loader):
 			x, y = x.to(device), y.to(device)
 			optimizer.zero_grad()
@@ -189,8 +196,11 @@ def fitness(learning_rate, weight_decay, dropout_rate, num_fc_layers, num_fc_uni
 			loss.backward()
 			optimizer.step()
 	#evaluate accuracy
+
 	accuracy = evaluate_accuracy_micro(model, val_loader)
+	print("done...")
 	print('Micro Accuracy: {0:.2%}'.format(accuracy))
+	print()
 	if accuracy > best_accuracy:
 		#if the model has better accuracy than the current best
 		torch.save(model, path_best_model)
@@ -202,10 +212,12 @@ if __name__ == "__main__":
 	#set random seeds for consistency
 	torch.manual_seed(1337)
 	np.random.seed(42)
-	use_cuda = torch.cuda.is_available()
-	print('cuda = ', use_cuda)
-	device = torch.device("cuda:0")
-	device = torch.device(device)
+
+	device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+	# use_cuda = torch.cuda.is_available()
+	# print('cuda = ', use_cuda)
+	# device = torch.device("cuda:0")
+	# device = torch.device(device)
 	#same labels, test_size, n_splits as in split_data
 
 	parser = argparse.ArgumentParser(
@@ -237,8 +249,9 @@ if __name__ == "__main__":
 	inputDir=args.inputDir
 	outputDir=args.outputDir
 	split=args.splitFold
-
-	print (split)
+	print()
+	print ("split = ", split)
+	#print()
 	# if len(sys.argv) > 2:
 	# 	label = '_' + sys.argv[1]
 	# else:
@@ -246,7 +259,9 @@ if __name__ == "__main__":
 	#load data
 	#
 	x_train_folds, x_val_folds, y_train_folds, y_val_folds, x_test, y_test, n_features, n_types= process_data_all(test_size, n_splits, label, inputDir, outputDir)
-	print('Done Data Processing')
+	print()
+	print('data Pre-Processing done..')
+	print()
 	#split = int(sys.argv[-1]) #defined from the .sh file, index which grabs the correct ensemble fold
 	x_train, y_train = x_train_folds[split], y_train_folds[split]
 	x_val, y_val = x_val_folds[split], y_val_folds[split]
@@ -258,7 +273,7 @@ if __name__ == "__main__":
 	best_accuracy = 0.0
 	#gp_minimize finds the minimum of the fitness function by approximating it with a gaussian process, acquisition function over a gaussian prior chooses next param to evaluate
 	#search_result = gp_minimize(func=fitness, dimensions=dimensions, acq_func='gp_hedge', n_calls=500, x0=default_paramaters, random_state=7, n_jobs = -1)
-	search_result = gp_minimize(func=fitness, dimensions=dimensions, acq_func='gp_hedge', n_calls=10, x0=default_paramaters, random_state=7, n_jobs = -1)
+	search_result = gp_minimize(func=fitness, dimensions=dimensions, acq_func='gp_hedge', n_calls=20, x0=default_paramaters, random_state=7, n_jobs = -1)
 	#save hyperparameters
 	hyps = np.asarray(search_result.x)
 	np.save(outputDir + 'mskcl_MLPsplit_' + str(split) + label + '.npy', hyps)
