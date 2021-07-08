@@ -1,12 +1,20 @@
 #!/usr/bin/env bash
 
+step=1
+rLSF="rusage[mem=24]"
+nLSF=1
+mLSF="ly-gpu"
+qLSF="gpuqueue -n 1 -gpu \"num=1:mps=yes\""
+gpuLSF="num=1:j_exclusive=yes:mode=shared"
 
 inputDataDir='../Data/'
 featureTable=${inputDataDir}/FeatureTable/feature_table_all_cases_sigs.tsv
 
 outputDir='../Data/output/step1/'
+logDir='../Data/Log/step1'
 
 mkdir -p $outputDir 2>/dev/null
+mkdir -p $logDir 2>/dev/null
 
 testSize=20
 n_splits=10
@@ -18,13 +26,14 @@ n_splits=10
 
 cmd="bsub \
     -W 72.00 \
-    -o split_data.out \
-    -eo split_data.stderr \
-    -m ly-gpu \
-    -q gpuqueue -n 1 -gpu num=1:mps=yes \
-    -n 1 -R rusage[mem=24] \
-    -gpu num=1:j_exclusive=yes:mode=shared \
-    -J split_data \
+    -o ${logDir}/step${step}.out \
+    -eo ${logDir}/step${step}.stderr \
+    -m \"$mLSF\" \
+    -q $qLSF \
+    -n $nLSF \
+    -R \"$rLSF\" \
+    -gpu \"$gpuLSF\" \
+    -J gddP2_step${step} \
     python msk_split_data.py -ft ${featureTable} -ts $testSize -ns $n_splits -od $outputDir"
 
 date
