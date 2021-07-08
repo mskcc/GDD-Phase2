@@ -8,13 +8,13 @@
 
 step=2
 rLSF="rusage[mem=24]"
-nLSF=1
-mLSF="ly-gpu"
-qLSF="gpuqueue -n 1 -gpu \"num=1:mps=yes\""
+nLSF=4
+mLSF="lt-gpu"
+qLSF="gpuqueue"
 gpuLSF="num=1:j_exclusive=yes:mode=shared"
 
 inputDir='../Data/output/step1/'
-outputDir=./Data/output/step${step}/
+outputDir=../Data/output/step$step/
 logDir=../Data/Log/step$step
 
 mkdir -p $outputDir 2>/dev/null
@@ -22,7 +22,11 @@ mkdir -p $logDir 2>/dev/null
 
 testSize=20
 n_splits=10
+# n_splits=2
 
+module load cuda/10.1
+source /home/sumans/miniconda3/bin/activate
+conda activate gddP2
 
 for ((split_fold=0; split_fold<$n_splits;split_fold++)); do
   #split_fold=$split
@@ -48,7 +52,7 @@ for ((split_fold=0; split_fold<$n_splits;split_fold++)); do
   echo
   echo $cmd
 
-  #eval $cmd
+  eval $cmd
   echo
   date
   echo "All done"

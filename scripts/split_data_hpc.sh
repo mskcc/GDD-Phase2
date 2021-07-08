@@ -3,7 +3,8 @@
 step=1
 rLSF="rusage[mem=24]"
 nLSF=1
-mLSF="ly-gpu"
+# mLSF="ls-gpu"
+mLSF="lt-gpu"
 qLSF="gpuqueue -n 1 -gpu \"num=1:mps=yes\""
 gpuLSF="num=1:j_exclusive=yes:mode=shared"
 
@@ -21,6 +22,7 @@ n_splits=10
 
 # source ~/.bashrc
 module load cuda/10.1
+source /home/sumans/miniconda3/bin/activate
 conda activate gddP2
 #conda activate vir-env
 #python msk_split_data.py

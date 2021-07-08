@@ -213,11 +213,11 @@ if __name__ == "__main__":
 	torch.manual_seed(1337)
 	np.random.seed(42)
 
-	device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-	# use_cuda = torch.cuda.is_available()
-	# print('cuda = ', use_cuda)
-	# device = torch.device("cuda:0")
-	# device = torch.device(device)
+	#device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+	use_cuda = torch.cuda.is_available()
+	print('cuda = ', use_cuda)
+	device = torch.device("cuda:0")
+	device = torch.device(device)
 	#same labels, test_size, n_splits as in split_data
 
 	parser = argparse.ArgumentParser(
@@ -249,6 +249,7 @@ if __name__ == "__main__":
 	inputDir=args.inputDir
 	outputDir=args.outputDir
 	split=args.splitFold
+	#print(outputDir)
 	print()
 	print ("split = ", split)
 	#print()
@@ -273,7 +274,7 @@ if __name__ == "__main__":
 	best_accuracy = 0.0
 	#gp_minimize finds the minimum of the fitness function by approximating it with a gaussian process, acquisition function over a gaussian prior chooses next param to evaluate
 	#search_result = gp_minimize(func=fitness, dimensions=dimensions, acq_func='gp_hedge', n_calls=500, x0=default_paramaters, random_state=7, n_jobs = -1)
-	search_result = gp_minimize(func=fitness, dimensions=dimensions, acq_func='gp_hedge', n_calls=500, x0=default_paramaters, random_state=7, n_jobs = -1)
+	search_result = gp_minimize(func=fitness, dimensions=dimensions, acq_func='gp_hedge', n_calls=100, x0=default_paramaters, random_state=7, n_jobs = -1)
 	#save hyperparameters
 	hyps = np.asarray(search_result.x)
 	np.save(outputDir + 'mskcl_MLPsplit_' + str(split) + label + '.npy', hyps)
