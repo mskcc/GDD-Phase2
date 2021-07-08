@@ -10,8 +10,8 @@ gpuLSF="num=1:j_exclusive=yes:mode=shared"
 inputDataDir='../Data/'
 featureTable=${inputDataDir}/FeatureTable/feature_table_all_cases_sigs.tsv
 
-outputDir='../Data/output/step1/'
-logDir='../Data/Log/step1'
+outputDir=../Data/output/step${step}/
+logDir=../Data/Log/step$step
 
 mkdir -p $outputDir 2>/dev/null
 mkdir -p $logDir 2>/dev/null
