@@ -20,12 +20,13 @@ testSize=20
 n_splits=10
 
 # source ~/.bashrc
-# module load cuda/10.1
-# conda activate vir-env
+module load cuda/10.1
+conda activate gddP2
+#conda activate vir-env
 #python msk_split_data.py
 
 cmd="bsub \
-    -W 72.00 \
+    -W 72:00 \
     -o ${logDir}/step${step}.out \
     -eo ${logDir}/step${step}.stderr \
     -m \"$mLSF\" \
@@ -40,7 +41,7 @@ date
 echo "Job Starting"
 echo $cmd
 
-#eval $cmd
+eval $cmd
 echo
 date
 echo "All done"

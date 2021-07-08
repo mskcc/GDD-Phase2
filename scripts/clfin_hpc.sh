@@ -29,7 +29,7 @@ for ((split_fold=0; split_fold<$n_splits;split_fold++)); do
   #echo $split_fold
 
   cmd="bsub \
-      -W 72.00 \
+      -W 72:00 \
       -o ${logDir}/step${step}_split_${split_fold}.out \
       -eo ${logDir}/step${step}_split_${split_fold}.stderr \
       -m \"$mLSF\" \
