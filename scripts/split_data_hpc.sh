@@ -3,7 +3,8 @@
 step=1
 rLSF="rusage[mem=24]"
 nLSF=1
-mLSF="ly-gpu"
+# mLSF="ls-gpu"
+mLSF="lt-gpu"
 qLSF="gpuqueue -n 1 -gpu \"num=1:mps=yes\""
 gpuLSF="num=1:j_exclusive=yes:mode=shared"
 
@@ -20,12 +21,14 @@ testSize=20
 n_splits=10
 
 # source ~/.bashrc
-# module load cuda/10.1
-# conda activate vir-env
+module load cuda/10.1
+source /home/sumans/miniconda3/bin/activate
+conda activate gddP2
+#conda activate vir-env
 #python msk_split_data.py
 
 cmd="bsub \
-    -W 72.00 \
+    -W 72:00 \
     -o ${logDir}/step${step}.out \
     -eo ${logDir}/step${step}.stderr \
     -m \"$mLSF\" \
@@ -40,7 +43,7 @@ date
 echo "Job Starting"
 echo $cmd
 
-#eval $cmd
+eval $cmd
 echo
 date
 echo "All done"

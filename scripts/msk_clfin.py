@@ -213,11 +213,11 @@ if __name__ == "__main__":
 	torch.manual_seed(1337)
 	np.random.seed(42)
 
-	device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-	# use_cuda = torch.cuda.is_available()
-	# print('cuda = ', use_cuda)
-	# device = torch.device("cuda:0")
-	# device = torch.device(device)
+	#device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+	use_cuda = torch.cuda.is_available()
+	print('cuda = ', use_cuda)
+	device = torch.device("cuda:0")
+	device = torch.device(device)
 	#same labels, test_size, n_splits as in split_data
 
 	parser = argparse.ArgumentParser(
@@ -249,6 +249,7 @@ if __name__ == "__main__":
 	inputDir=args.inputDir
 	outputDir=args.outputDir
 	split=args.splitFold
+	#print(outputDir)
 	print()
 	print ("split = ", split)
 	#print()
