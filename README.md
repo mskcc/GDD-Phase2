@@ -50,3 +50,20 @@ git checkout feature_ss_hpc
 mkdir -p ./Data/FeatureTable
 
 ```
+
+
+## LSF commands
+
+```
+bjobs
+
+bpeek jobid
+
+bjobs -p3 -l <jobid>
+
+bhosts
+
+bmgroup
+
+bqueues
+```
