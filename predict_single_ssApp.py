@@ -19,13 +19,19 @@ from torch.utils.data import Dataset, DataLoader, TensorDataset
 import sys
 import scipy.stats
 
-from predict_single import EnsembleClassifier, process_data_single, MLP, pred_results
+from predict_single_ss import EnsembleClassifier, process_data_single, MLP, pred_results
 
 
 
-inputDir='/Users/shalabhs/Projects/GDD/Project_GDDV2/Data'
-modelName='ensemble_classifier_update_bal.pt'
-print("Hello SS")
+# inputDir='/Users/shalabhs/Projects/GDD/Project_GDDV2/Data'
+# modelName='ensemble_classifier_update_bal.pt'
+# print("Hello SS")
+
+
+inputFile='/Users/shalabhs/Projects/GDD/Project_GDDV2/GDD-Phase2/features_20220519160652.%f_77a49988.txt'
+outputFile='single_res_1.csv'
+dlModel='/Users/shalabhs/Projects/GDD/Project_GDDV2/Data/ensemble_classifier_update_bal.pt'
+label = ''
 
 torch.manual_seed(1337)
 np.random.seed(42)
@@ -46,14 +52,10 @@ else:
 print(deviceParam)
 
 
+# print(os.path.join(inputDir, modelName))
 
-label = ''
+fold_ensemble = torch.load(dlModel, map_location=device)
 
-print(os.path.join(inputDir, modelName))
-
-fold_ensemble = torch.load(os.path.join(inputDir, modelName), map_location=device)
-
-colnames = pd.read_csv('single_test.csv')
 
 #colnames = pd.read_csv('/Users/shalabhs/Projects/GDD/Project_GDDV2/Data/DMPJson/features_20220519160652.%f_77a49988.txt', sep="\t")
 
@@ -66,13 +68,22 @@ print("hello SS")
 #
 # print(single_data)
 
-torch.set_printoptions(edgeitems=3)
+print("process data single starts")
+
+# torch.set_printoptions(edgeitems=3)
+colnames = pd.read_csv(inputFile, sep='\t')
 pred_data = process_data_single(colnames)
+print("Done")
+
 pred_data = torch.from_numpy(pred_data).float()
 print(type(pred_data))
 print(pred_data.numpy().shape)
 
 pred_data = pred_data.to(device)
+
+print("predict data starts")
+
+
 
 fold_logits = fold_ensemble(pred_data)
 
@@ -101,4 +112,4 @@ res1=np.concatenate([preds, probs], axis=None, dtype=object)
 # res = pd.DataFrame([preds,probs]).T
 res = pd.DataFrame(res1).T
 res.columns = ['pred1','pred2','pred3','prob1','prob2', 'prob3' ]
-res.to_csv('single_res.csv',index=False)
+res.to_csv(outputFile, index=False)
