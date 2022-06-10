@@ -1,0 +1,13 @@
+Gene_Fusion	Intragenic_Fusion
+ALK	EGFR-intragenic
+BRAF	MET-intragenic
+ETV6	
+FGFR2	
+FGFR3	
+NTRK1	
+NTRK2	
+NTRK3	
+PAX8	
+RET	
+ROS1	
+TMPRSS2	
