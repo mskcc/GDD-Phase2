@@ -2,7 +2,7 @@ Gene_Fusion	Intragenic_Fusion
 ALK	EGFR-intragenic
 BRAF	MET-intragenic
 ETV6	
-ESWR1
+EWSR1
 FGFR2	
 FGFR3	
 NTRK1	
