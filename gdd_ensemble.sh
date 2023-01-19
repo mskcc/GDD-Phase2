@@ -3,10 +3,10 @@
 #BSUB -W 72:00
 #
 # Set output file
-#BSUB -o  split_data.out
+#BSUB -o  gdd_ensemble.out
 #
 # Set error file
-#BSUB -eo split_data.stderr
+#BSUB -eo gdd_ensemble.stderr
 #
 # Specify node group
 #BSUB -q gpuqueue -n 1 -gpu "num=1:mps=yes"
@@ -16,9 +16,9 @@
 #BSUB -gpu "num=1:j_exclusive=yes:mode=shared"
 #
 # job name (default = name of script file)
-#BSUB -J "split_data"
+#BSUB -J "gdd_ensemble"
 source ~/.bashrc
 module load cuda/10.1
 conda activate vir-env
-python split_data.py
+python gdd_ensemble.py
 
